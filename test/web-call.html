@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ava — web call test</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 48px auto; padding: 0 16px; color: #111; }
+  button { font-size: 18px; padding: 12px 24px; border-radius: 8px; border: 0; cursor: pointer; }
+  #start { background: #16a34a; color: #fff; } #stop { background: #dc2626; color: #fff; margin-left: 8px; }
+  #status { margin: 16px 0; font-weight: 600; }
+  #log { background: #f4f4f5; padding: 12px; border-radius: 8px; height: 360px; overflow: auto; font-size: 14px; white-space: pre-wrap; }
+  .bot { color: #1d4ed8; } .user { color: #065f46; } .sys { color: #6b7280; }
+</style>
+</head>
+<body>
+<h2>Ava — Northstar Lead Qualifier (live assistant test)</h2>
+<p>Assistant <code>__ASSISTANT_ID__</code> · uses the live API version, not the dashboard draft.</p>
+<button id="start">📞 Start call</button><button id="stop">Hang up</button>
+<div id="status">idle</div>
+<div id="log"></div>
+<script type="module">
+  import Vapi from "https://esm.sh/@vapi-ai/web";
+  const vapi = new Vapi("__PUBLIC_KEY__");
+  const log = (cls, t) => { const d = document.createElement("div"); d.className = cls; d.textContent = t; const l = document.getElementById("log"); l.appendChild(d); l.scrollTop = l.scrollHeight; };
+  const status = t => document.getElementById("status").textContent = t;
+  document.getElementById("start").onclick = async () => { status("connecting…"); try { await vapi.start("__ASSISTANT_ID__"); } catch (e) { status("start failed"); log("sys", String(e)); } };
+  document.getElementById("stop").onclick = () => vapi.stop();
+  vapi.on("call-start", () => { status("🟢 in call"); log("sys", "call started"); });
+  vapi.on("call-end", () => { status("call ended"); log("sys", "call ended"); });
+  vapi.on("speech-start", () => status("🟢 in call — Ava speaking"));
+  vapi.on("speech-end", () => status("🟢 in call — listening"));
+  vapi.on("message", m => { if (m.type === "transcript" && m.transcriptType === "final") log(m.role === "assistant" ? "bot" : "user", `${m.role}: ${m.transcript}`); });
+  vapi.on("error", e => { status("error"); log("sys", "error: " + JSON.stringify(e)); });
+</script>
+</body>
+</html>

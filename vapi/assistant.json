@@ -57,11 +57,11 @@
       "messages": [
         {
           "role": "system",
-          "content": "Extract the lead details from this sales-intake call transcript. Use null for anything not mentioned. Respond ONLY with JSON matching the schema."
+          "content": "You are an expert data extractor for a sales-intake call. You will be given a transcript. Extract the lead details per the JSON Schema. Use null for anything not mentioned. DO NOT return anything except the structured data.\n\nJson Schema:\n{{schema}}\n\nOnly respond with the JSON."
         },
         {
           "role": "user",
-          "content": "Here is the transcript:\n\n{{transcript}}\n\n"
+          "content": "Here is the transcript:\n\n{{transcript}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
         }
       ],
       "schema": {
