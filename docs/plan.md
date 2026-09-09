@@ -35,10 +35,10 @@ Call works even if n8n is down (assistant degrades gracefully on tool failure).
 | 1 | Vapi account, API keys + Gemini BYOK into `.env` / Integrations | user | done |
 | 2 | Create assistant via API (`vapi/assistant.json`): prompt, Gemini model, voice, structured outputs, max duration | Claude | done |
 | 3 | Test web call from dashboard ("Test" → talk) — verify transcript + structured output in Logs | user+Claude | done |
-| 4 | Google Cloud: enable Calendar API, add scope; n8n Calendar credential | user | |
+| 4 | Google Cloud: enable Calendar API, add scope; n8n Calendar credential | user | done |
 | 5 | HubSpot free account → private app token → 5 custom properties | user | done |
 | 6 | WF-2 post-call workflow in local n8n, tested with a replayed end-of-call payload | Claude | done |
-| 7 | WF-1 tool workflow (availability + booking); register tools on assistant | Claude | |
+| 7 | WF-1 tool workflow (availability + booking); register tools on assistant | Claude | done |
 | 8 | Public n8n hosting (Oracle or n8n Cloud); import workflows; set Server URL on assistant | user+Claude | |
 | 9 | Free US phone number → attach assistant; real phone test call | user+Claude | |
 | 10 | Next.js landing page with web-call button; deploy to Vercel | Claude, user connects Vercel | |
