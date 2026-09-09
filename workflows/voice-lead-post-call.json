@@ -180,7 +180,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
-        1120,
+        1340,
         260
       ],
       "onError": "continueRegularOutput",
@@ -203,29 +203,8 @@
           "value": "Leads"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Timestamp": "={{ $json.scored_at }}",
-            "Name": "={{ $json.name }}",
-            "Company": "={{ $json.company }}",
-            "Email": "={{ $json.email }}",
-            "Phone": "={{ $json.caller_number }}",
-            "Need": "={{ $json.need }}",
-            "Details": "={{ $json.need_details }}",
-            "Budget": "={{ $json.budget_label }}",
-            "Timeline": "={{ $json.timeline_label }}",
-            "Decision Maker": "={{ $json.decision_maker ? 'Yes' : 'No' }}",
-            "Score": "={{ $json.score }}",
-            "Tier": "={{ $json.tier }}",
-            "Booked": "={{ $json.booking_confirmed ? $json.booked_slot : 'No' }}",
-            "Summary": "={{ $json.summary }}",
-            "Next Action": "={{ $json.next_action }}",
-            "Call Type": "={{ $json.call_type }}",
-            "Duration (s)": "={{ $json.duration_sec }}",
-            "Cost ($)": "={{ $json.cost_usd }}",
-            "Recording": "={{ $json.recording_url }}",
-            "Call ID": "={{ $json.call_id }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [],
           "schema": []
         },
@@ -287,6 +266,19 @@
         520
       ],
       "parameters": {}
+    },
+    {
+      "id": "n11",
+      "name": "Build Sheet Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        260
+      ],
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nreturn [{ json: {\n  \"Timestamp\": j.scored_at,\n  \"Name\": j.name,\n  \"Company\": j.company,\n  \"Email\": j.email,\n  \"Phone\": j.caller_number,\n  \"Need\": j.need,\n  \"Details\": j.need_details,\n  \"Budget\": j.budget_label,\n  \"Timeline\": j.timeline_label,\n  \"Decision Maker\": j.decision_maker ? 'Yes' : 'No',\n  \"Score\": j.score,\n  \"Tier\": j.tier,\n  \"Booked\": j.booking_confirmed ? j.booked_slot : 'No',\n  \"Summary\": j.summary,\n  \"Next Action\": j.next_action,\n  \"Call Type\": j.call_type,\n  \"Duration (s)\": j.duration_sec,\n  \"Cost ($)\": j.cost_usd,\n  \"Recording\": j.recording_url,\n  \"Call ID\": j.call_id,\n} }];"
+      }
     }
   ],
   "connections": {
@@ -350,7 +342,7 @@
             "index": 0
           },
           {
-            "node": "Sheets — Append Lead",
+            "node": "Build Sheet Row",
             "type": "main",
             "index": 0
           },
@@ -361,6 +353,17 @@
           },
           {
             "node": "Gmail — Lead Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "Sheets — Append Lead",
             "type": "main",
             "index": 0
           }
