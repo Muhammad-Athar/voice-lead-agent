@@ -16,7 +16,10 @@ def unflat(arr):
         if isinstance(v, dict): return {k: rec(x) for k, x in v.items()}
         return v
     return rec(arr[0])
-d = unflat(data) if isinstance(data, list) else data
+try:
+    d = unflat(data) if isinstance(data, list) else data
+except Exception as e:
+    print("could not unflatten execution data:", e); sys.exit(0)
 for node, runs in d.get("resultData", {}).get("runData", {}).items():
     r = runs[0]; err = r.get("error"); out = (r.get("data") or {}).get("main", [[]])[0] or []
     print(f"- {node}: {'ERROR ' + str(err.get('message'))[:220] if err else 'ok, items=' + str(len(out))}")
