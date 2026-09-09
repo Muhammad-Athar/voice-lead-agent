@@ -1,0 +1,494 @@
+{
+  "message": {
+    "type": "end-of-call-report",
+    "endedReason": "assistant-ended-call",
+    "cost": 0.1553,
+    "durationSeconds": 126,
+    "startedAt": "2026-09-09T21:58:30.706Z",
+    "endedAt": "2026-09-09T22:00:36.456Z",
+    "summary": "Sarah from Bloom to Backly needs an order-taking chatbot for their website, with a budget of around $5,000 and an ASAP timeline. A 20-minute discovery call has been scheduled, with time options to be emailed to her.",
+    "analysis": {
+      "summary": "Sarah from Bloom to Backly needs an order-taking chatbot for their website, with a budget of around $5,000 and an ASAP timeline. A 20-minute discovery call has been scheduled, with time options to be emailed to her.",
+      "successEvaluation": "true",
+      "structuredData": {
+        "name": "Sarah",
+        "company": "Bloom Bakery",
+        "need": "chatbot",
+        "need_details": "An order-taking chatbot for their website.",
+        "budget_band": "2k_to_10k",
+        "timeline": "asap",
+        "decision_maker": true,
+        "email": "sarah@bloombakery.com",
+        "booking_confirmed": false,
+        "booked_slot": null,
+        "not_a_fit": false
+      }
+    },
+    "artifact": {
+      "transcript": "AI: Hi. Thanks for calling NorthStar Digital. This is Eva. Can get you set up with the right person on our team. It just takes a couple of quick questions. Who am I speaking with?\nUser: My name is Sarah.\nAI: Hi, Sarah. Great to meet you. Is the name of your company?\nUser: It's.\nAI: Sorry. I didn't quite catch that. What is the name of your company?\nUser: It bloomed backly.\nAI: Got it. Bloom to Backly. And what can we help you build? Is it a website, chatbot, automation, or something else?\nUser: So I need a bot. That can for our website to take orders. A chat mode for our website to take orders.\nAI: A chatbot for taking orders sounds great. What is your rough budget for this project? Under 2002 to 10000, or over?\nUser: It's around 5000.\nAI: Perfect. So that falls in our 2 to 10000 range. And what is your timeline for getting this live? ASAP?\nUser: I need it as soon as possible.\nAI: We can definitely aim for ASAP. Are you the decision maker for this project?\nUser: Yeah. I am.\nAI: Great. And what is the best email address to reach you at?\nUser: It's Sarah at Bloomberg dot com.\nAI: Got it. That is Sarah at Bloomberg dot com. Is that correct?\nUser: Yes. It is.\nAI: Perfect. I'll have 1 of our strategists email you 2 time options for a 20 minute discovery call within the hour. We'll get you set up to discuss that order taking chatbot for Bloom to Backly as soon as possible. Thanks so much for your time, Sarah, and have a great day.\nUser: Thank you.\nAI: Thanks so much. You'll hear from us shortly. Have a great\n",
+      "recordingUrl": "https://94bdb67bb98da30b06bdd917725c037d.r2.cloudflarestorage.com/hipaa-recordings/01a0882d-fd22-7dd4-9eef-4cbb1e5a6493-1788991239041-fef342e3-57e3-4c2d-8671-01861db4d6ca-mono.wav",
+      "messages": [
+        {
+          "role": "bot",
+          "time": 1788991113346,
+          "source": "",
+          "endTime": 1788991122666,
+          "message": "Hi. Thanks for calling NorthStar Digital. This is Eva. Can get you set up with the right person on our team. It just takes a couple of quick questions. Who am I speaking with?",
+          "duration": 7839.998779296875,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 2.64
+        },
+        {
+          "role": "user",
+          "time": 1788991124136,
+          "endTime": 1788991125176,
+          "message": "My name is Sarah.",
+          "duration": 1040,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 13.75,
+                "word": "my",
+                "start": 13.43,
+                "confidence": 0.99902344,
+                "punctuated_word": "My"
+              },
+              {
+                "end": 13.91,
+                "word": "name",
+                "start": 13.75,
+                "confidence": 1,
+                "punctuated_word": "name"
+              },
+              {
+                "end": 14.07,
+                "word": "is",
+                "start": 13.91,
+                "confidence": 1,
+                "punctuated_word": "is"
+              },
+              {
+                "end": 14.47,
+                "word": "sarah",
+                "start": 14.07,
+                "confidence": 0.7841797,
+                "punctuated_word": "Sarah."
+              }
+            ]
+          },
+          "secondsFromStart": 13.43
+        },
+        {
+          "role": "bot",
+          "time": 1788991126626,
+          "source": "",
+          "endTime": 1788991129916.001,
+          "message": "Hi, Sarah. Great to meet you. Is the name of your company?",
+          "duration": 2800.0009765625,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 15.92
+        },
+        {
+          "role": "user",
+          "time": 1788991131236,
+          "endTime": 1788991131716,
+          "message": "It's.",
+          "duration": 480,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 21.01,
+                "word": "it's",
+                "start": 20.53,
+                "confidence": 0.7295329,
+                "punctuated_word": "It's."
+              }
+            ]
+          },
+          "secondsFromStart": 20.53
+        },
+        {
+          "role": "bot",
+          "time": 1788991134166,
+          "source": "",
+          "endTime": 1788991137296,
+          "message": "Sorry. I didn't quite catch that. What is the name of your company?",
+          "duration": 2800,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 23.46
+        },
+        {
+          "role": "user",
+          "time": 1788991137276,
+          "endTime": 1788991139596,
+          "message": "It bloomed backly.",
+          "duration": 2320,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 27.13,
+                "word": "it",
+                "start": 26.57,
+                "confidence": 0.4350586,
+                "punctuated_word": "It"
+              },
+              {
+                "end": 28.49,
+                "word": "bloomed",
+                "start": 27.69,
+                "confidence": 0.6805013,
+                "punctuated_word": "bloomed"
+              },
+              {
+                "end": 28.89,
+                "word": "backly",
+                "start": 28.49,
+                "confidence": 0.7176921,
+                "punctuated_word": "backly."
+              }
+            ]
+          },
+          "secondsFromStart": 26.57
+        },
+        {
+          "role": "bot",
+          "time": 1788991141026,
+          "source": "",
+          "endTime": 1788991147636,
+          "message": "Got it. Bloom to Backly. And what can we help you build? Is it a website, chatbot, automation, or something else?",
+          "duration": 6480,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 30.32
+        },
+        {
+          "role": "user",
+          "time": 1788991151306,
+          "endTime": 1788991159496,
+          "message": "So I need a bot. That can for our website to take orders. A chat mode for our website to take orders.",
+          "duration": 7119.99609375,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 40.84,
+                "word": "so",
+                "start": 40.6,
+                "confidence": 0.6660156,
+                "punctuated_word": "So"
+              },
+              {
+                "end": 41,
+                "word": "i",
+                "start": 40.84,
+                "confidence": 0.99609375,
+                "punctuated_word": "I"
+              },
+              {
+                "end": 41.16,
+                "word": "need",
+                "start": 41,
+                "confidence": 0.99902344,
+                "punctuated_word": "need"
+              },
+              {
+                "end": 41.4,
+                "word": "a",
+                "start": 41.16,
+                "confidence": 0.95947266,
+                "punctuated_word": "a"
+              },
+              {
+                "end": 41.64,
+                "word": "bot",
+                "start": 41.4,
+                "confidence": 0.6867676,
+                "punctuated_word": "bot."
+              }
+            ]
+          },
+          "secondsFromStart": 40.6
+        },
+        {
+          "role": "bot",
+          "time": 1788991161016,
+          "source": "",
+          "endTime": 1788991168686,
+          "message": "A chatbot for taking orders sounds great. What is your rough budget for this project? Under 2002 to 10000, or over?",
+          "duration": 7390,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 50.31
+        },
+        {
+          "role": "user",
+          "time": 1788991168856,
+          "endTime": 1788991171566,
+          "message": "It's around 5000.",
+          "duration": 2320.001953125,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 59.030003,
+                "word": "it's",
+                "start": 58.15,
+                "confidence": 0.93847656,
+                "punctuated_word": "It's"
+              },
+              {
+                "end": 59.510002,
+                "word": "around",
+                "start": 59.030003,
+                "confidence": 0.93115234,
+                "punctuated_word": "around"
+              }
+            ]
+          },
+          "secondsFromStart": 58.15
+        },
+        {
+          "role": "bot",
+          "time": 1788991173486,
+          "source": "",
+          "endTime": 1788991179886,
+          "message": "Perfect. So that falls in our 2 to 10000 range. And what is your timeline for getting this live? ASAP?",
+          "duration": 5360,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 62.78
+        },
+        {
+          "role": "user",
+          "time": 1788991179726,
+          "endTime": 1788991181935.996,
+          "message": "I need it as soon as possible.",
+          "duration": 1919.99609375,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 69.34,
+                "word": "i",
+                "start": 69.02,
+                "confidence": 0.9506836,
+                "punctuated_word": "I"
+              },
+              {
+                "end": 69.66,
+                "word": "need",
+                "start": 69.34,
+                "confidence": 0.734375,
+                "punctuated_word": "need"
+              },
+              {
+                "end": 69.9,
+                "word": "it",
+                "start": 69.66,
+                "confidence": 0.8701172,
+                "punctuated_word": "it"
+              }
+            ]
+          },
+          "secondsFromStart": 69.02
+        },
+        {
+          "role": "bot",
+          "time": 1788991183646,
+          "source": "",
+          "endTime": 1788991188346,
+          "message": "We can definitely aim for ASAP. Are you the decision maker for this project?",
+          "duration": 4160,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 72.94
+        },
+        {
+          "role": "user",
+          "time": 1788991189566,
+          "endTime": 1788991190286,
+          "message": "Yeah. I am.",
+          "duration": 720,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 79.18,
+                "word": "yeah",
+                "start": 78.86,
+                "confidence": 0.89941406,
+                "punctuated_word": "Yeah."
+              },
+              {
+                "end": 79.26,
+                "word": "i",
+                "start": 79.18,
+                "confidence": 0.51220703,
+                "punctuated_word": "I"
+              },
+              {
+                "end": 79.58,
+                "word": "am",
+                "start": 79.26,
+                "confidence": 0.85791016,
+                "punctuated_word": "am."
+              }
+            ]
+          },
+          "secondsFromStart": 78.86
+        },
+        {
+          "role": "bot",
+          "time": 1788991191976,
+          "source": "",
+          "endTime": 1788991194855.994,
+          "message": "Great. And what is the best email address to reach you at?",
+          "duration": 2879.993896484375,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 81.27
+        },
+        {
+          "role": "user",
+          "time": 1788991196156,
+          "endTime": 1788991198886,
+          "message": "It's Sarah at Bloomberg dot com.",
+          "duration": 2320.00390625,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 85.93,
+                "word": "it's",
+                "start": 85.45,
+                "confidence": 0.88623047,
+                "punctuated_word": "It's"
+              },
+              {
+                "end": 86.33,
+                "word": "sarah",
+                "start": 85.93,
+                "confidence": 0.8852539,
+                "punctuated_word": "Sarah"
+              },
+              {
+                "end": 86.57,
+                "word": "at",
+                "start": 86.33,
+                "confidence": 0.95703125,
+                "punctuated_word": "at"
+              }
+            ]
+          },
+          "secondsFromStart": 85.45
+        },
+        {
+          "role": "bot",
+          "time": 1788991200296,
+          "source": "",
+          "endTime": 1788991204746,
+          "message": "Got it. That is Sarah at Bloomberg dot com. Is that correct?",
+          "duration": 3759.9951171875,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 89.59
+        },
+        {
+          "role": "user",
+          "time": 1788991206256,
+          "endTime": 1788991207056,
+          "message": "Yes. It is.",
+          "duration": 800,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 95.950005,
+                "word": "yes",
+                "start": 95.55,
+                "confidence": 0.9589844,
+                "punctuated_word": "Yes."
+              },
+              {
+                "end": 96.19,
+                "word": "it",
+                "start": 95.950005,
+                "confidence": 0.9951172,
+                "punctuated_word": "It"
+              },
+              {
+                "end": 96.35,
+                "word": "is",
+                "start": 96.19,
+                "confidence": 0.99560547,
+                "punctuated_word": "is."
+              }
+            ]
+          },
+          "secondsFromStart": 95.55
+        },
+        {
+          "role": "bot",
+          "time": 1788991208676,
+          "source": "",
+          "endTime": 1788991222425.99,
+          "message": "Perfect. I'll have 1 of our strategists email you 2 time options for a 20 minute discovery call within the hour. We'll get you set up to discuss that order taking chatbot for Bloom to Backly as soon as possible. Thanks so much for your time, Sarah, and have a great day.",
+          "duration": 13039.9921875,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 97.97
+        },
+        {
+          "role": "user",
+          "time": 1788991224056,
+          "endTime": 1788991224536,
+          "message": "Thank you.",
+          "duration": 480,
+          "metadata": {
+            "wordLevelConfidence": [
+              {
+                "end": 113.67,
+                "word": "thank",
+                "start": 113.35,
+                "confidence": 0.95410156,
+                "punctuated_word": "Thank"
+              },
+              {
+                "end": 113.83,
+                "word": "you",
+                "start": 113.67,
+                "confidence": 0.9914551,
+                "punctuated_word": "you."
+              }
+            ]
+          },
+          "secondsFromStart": 113.35
+        },
+        {
+          "role": "bot",
+          "time": 1788991226156,
+          "source": "",
+          "endTime": 1788991230166,
+          "message": "Thanks so much. You'll hear from us shortly. Have a great",
+          "duration": 2639.99267578125,
+          "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+          "assistantName": "Ava \u2014 Northstar Lead Qualifier",
+          "secondsFromStart": 115.45
+        }
+      ]
+    },
+    "call": {
+      "id": "01a0882d-fd22-7dd4-9eef-4cbb1e5a6493",
+      "type": "webCall",
+      "assistantId": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+      "customer": {
+        "number": "+15550001234"
+      }
+    },
+    "assistant": {
+      "id": "7c9b5032-c13f-4a51-9a07-38147169e13e",
+      "name": "Ava \u2014 Northstar Lead Qualifier"
+    },
+    "customer": {
+      "number": "+15550001234"
+    },
+    "timestamp": "2026-09-09T22:00:36.456Z"
+  }
+}

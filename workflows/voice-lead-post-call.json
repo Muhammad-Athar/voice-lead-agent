@@ -1,0 +1,372 @@
+{
+  "id": "VoiceLeadPost001",
+  "name": "Voice Lead — Post-Call Pipeline",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "ExpFlowError0001"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Vapi End-of-Call",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "vapi-end-of-call",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-end-of-call",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Is End-of-Call Report?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.message.type }}",
+              "rightValue": "end-of-call-report",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Normalize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const m = $input.first().json.body.message;\nconst sd = (m.analysis && m.analysis.structuredData) || {};\nconst num = (m.customer && m.customer.number) || (m.call && m.call.customer && m.call.customer.number) || null;\nconst started = m.startedAt ? new Date(m.startedAt) : null;\nconst ended = m.endedAt ? new Date(m.endedAt) : null;\nconst budgetLabel = { under_2k: 'Under $2k', '2k_to_10k': '$2k–$10k', over_10k: 'Over $10k', not_sure: 'Not sure' };\nconst timelineLabel = { asap: 'ASAP', this_quarter: 'This quarter', exploring: 'Just exploring' };\nreturn [{ json: {\n  call_id: m.call && m.call.id,\n  call_type: (m.call && m.call.type) || 'unknown',\n  caller_number: num || 'web call',\n  started_at: m.startedAt || null,\n  duration_sec: started && ended ? Math.round((ended - started) / 1000) : null,\n  cost_usd: typeof m.cost === 'number' ? Number(m.cost.toFixed(3)) : null,\n  ended_reason: m.endedReason || null,\n  summary: (m.analysis && m.analysis.summary) || m.summary || '',\n  success: (m.analysis && m.analysis.successEvaluation) || null,\n  transcript: (m.artifact && m.artifact.transcript) || '',\n  recording_url: (m.artifact && m.artifact.recordingUrl) || '',\n  name: sd.name || 'Unknown caller',\n  company: sd.company || '',\n  need: sd.need || 'other',\n  need_details: sd.need_details || '',\n  budget_band: sd.budget_band || 'not_sure',\n  budget_label: budgetLabel[sd.budget_band] || 'Not sure',\n  timeline: sd.timeline || 'exploring',\n  timeline_label: timelineLabel[sd.timeline] || 'Just exploring',\n  decision_maker: sd.decision_maker === true,\n  email: (sd.email || '').toLowerCase().trim(),\n  booking_confirmed: sd.booking_confirmed === true,\n  booked_slot: sd.booked_slot || '',\n  not_a_fit: sd.not_a_fit === true\n}}];"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Score Lead (Gemini)",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RklLoc8Cc7Vk2o0I",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Score this inbound sales lead for a digital agency (websites, chatbots, automation).\n\nLead fields:\n- Name: {{ $json.name }} ({{ $json.company }})\n- Need: {{ $json.need }} — {{ $json.need_details }}\n- Budget: {{ $json.budget_label }}\n- Timeline: {{ $json.timeline_label }}\n- Decision maker: {{ $json.decision_maker }}\n- Booking confirmed: {{ $json.booking_confirmed }}\n- Flagged not a fit: {{ $json.not_a_fit }}\n\nTranscript:\n{{ $json.transcript }}\n\nReturn ONLY a JSON object with exactly these keys:\nscore (integer 0-100), tier (one of: hot, warm, cold), reasoning (one sentence), next_action (one short imperative sentence for the sales rep).\nScoring guide: budget over $2k, ASAP/this-quarter timeline and decision-maker each add strongly; 'not sure' budget or 'just exploring' lowers; not_a_fit = score under 10."
+            }
+          ]
+        },
+        "simplify": true,
+        "jsonOutput": true,
+        "options": {
+          "temperature": 0.2,
+          "maxOutputTokens": 300
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Merge Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const lead = $('Normalize Lead').first().json;\nconst raw = $input.first().json;\n// Find the model text in whatever shape the Gemini node returned\nlet text = '';\nif (typeof raw === 'string') text = raw;\nelse if (raw.content && raw.content.parts) text = raw.content.parts.map(p => p.text || '').join('');\nelse if (raw.candidates) text = ((raw.candidates[0] || {}).content || {}).parts?.map(p => p.text || '').join('') || '';\nelse if (typeof raw.text === 'string') text = raw.text;\nelse if (raw.score !== undefined) text = JSON.stringify(raw);\nelse text = JSON.stringify(raw);\nlet parsed = {};\ntry { parsed = JSON.parse(text); } catch (e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/); if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) {} }\n}\nlet score = Number(parsed.score);\nif (!Number.isFinite(score)) {\n  // deterministic fallback so the pipeline never stalls\n  score = 20 + (lead.budget_band === 'over_10k' ? 35 : lead.budget_band === '2k_to_10k' ? 25 : 0)\n        + (lead.timeline === 'asap' ? 20 : lead.timeline === 'this_quarter' ? 10 : 0)\n        + (lead.decision_maker ? 15 : 0) + (lead.booking_confirmed ? 10 : 0);\n  if (lead.not_a_fit) score = 5;\n}\nscore = Math.max(0, Math.min(100, Math.round(score)));\nconst tier = ['hot','warm','cold'].includes(parsed.tier) ? parsed.tier : (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');\nconst emoji = { hot: '🔥', warm: '🌤️', cold: '🧊' }[tier];\nreturn [{ json: { ...lead, score, tier, tier_emoji: emoji,\n  reasoning: parsed.reasoning || 'Scored by fallback rules (model output unparseable).',\n  next_action: parsed.next_action || 'Review transcript and follow up by email.',\n  scored_at: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "HubSpot — Upsert Contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        80
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "__HUBSPOT_CRED_ID__",
+          "name": "HubSpot — Voice Leads"
+        }
+      },
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $json.email || ($json.call_id + '@voice-lead.local') }}",
+        "additionalFields": {
+          "firstName": "={{ $json.name.split(' ')[0] }}",
+          "lastName": "={{ $json.name.split(' ').slice(1).join(' ') || '-' }}",
+          "companyName": "={{ $json.company }}",
+          "phoneNumber": "={{ $json.caller_number === 'web call' ? '' : $json.caller_number }}",
+          "leadStatus": "NEW",
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "lead_score",
+                "value": "={{ $json.score }}"
+              },
+              {
+                "property": "lead_tier",
+                "value": "={{ $json.tier }}"
+              },
+              {
+                "property": "budget_band",
+                "value": "={{ $json.budget_label }}"
+              },
+              {
+                "property": "project_timeline",
+                "value": "={{ $json.timeline_label }}"
+              },
+              {
+                "property": "call_summary",
+                "value": "={{ $json.summary }}"
+              }
+            ]
+          }
+        }
+      },
+      "disabled": true
+    },
+    {
+      "id": "n7",
+      "name": "Sheets — Append Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        260
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uEmCrIElZokQI3Xa",
+          "name": "GSheets — ExpenseFlow"
+        }
+      },
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "__SHEET_ID__"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.scored_at }}",
+            "Name": "={{ $json.name }}",
+            "Company": "={{ $json.company }}",
+            "Email": "={{ $json.email }}",
+            "Phone": "={{ $json.caller_number }}",
+            "Need": "={{ $json.need }}",
+            "Details": "={{ $json.need_details }}",
+            "Budget": "={{ $json.budget_label }}",
+            "Timeline": "={{ $json.timeline_label }}",
+            "Decision Maker": "={{ $json.decision_maker ? 'Yes' : 'No' }}",
+            "Score": "={{ $json.score }}",
+            "Tier": "={{ $json.tier }}",
+            "Booked": "={{ $json.booking_confirmed ? $json.booked_slot : 'No' }}",
+            "Summary": "={{ $json.summary }}",
+            "Next Action": "={{ $json.next_action }}",
+            "Call Type": "={{ $json.call_type }}",
+            "Duration (s)": "={{ $json.duration_sec }}",
+            "Cost ($)": "={{ $json.cost_usd }}",
+            "Recording": "={{ $json.recording_url }}",
+            "Call ID": "={{ $json.call_id }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n8",
+      "name": "Slack — Lead Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        440
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "__SLACK_WEBHOOK_URL__",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: `${$json.tier_emoji} ${$json.tier.toUpperCase()} lead (${$json.score}/100): ${$json.name} — ${$json.company || 'no company'}`, blocks: [\n  { type: 'header', text: { type: 'plain_text', text: `${$json.tier_emoji} ${$json.tier.toUpperCase()} lead · ${$json.score}/100 · ${$json.name}` } },\n  { type: 'section', fields: [\n    { type: 'mrkdwn', text: `*Company*\\n${$json.company || '—'}` }, { type: 'mrkdwn', text: `*Need*\\n${$json.need} — ${$json.need_details || ''}` },\n    { type: 'mrkdwn', text: `*Budget*\\n${$json.budget_label}` }, { type: 'mrkdwn', text: `*Timeline*\\n${$json.timeline_label}` },\n    { type: 'mrkdwn', text: `*Decision maker*\\n${$json.decision_maker ? 'Yes' : 'No'}` }, { type: 'mrkdwn', text: `*Meeting*\\n${$json.booking_confirmed ? $json.booked_slot : 'Not booked — email 2 slots'}` } ] },\n  { type: 'section', text: { type: 'mrkdwn', text: `*Summary*\\n${$json.summary}\\n\\n*Why ${$json.score}:* ${$json.reasoning}\\n*Next:* ${$json.next_action}` } },\n  { type: 'context', elements: [ { type: 'mrkdwn', text: `${$json.email || 'no email'} · ${$json.caller_number} · ${$json.duration_sec}s · $${$json.cost_usd} · <${$json.recording_url}|recording>` } ] } ] }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n9",
+      "name": "Gmail — Lead Digest",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        620
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "jKyXZhMEhpyJtCuc",
+          "name": "Gmail — ExpenseFlow"
+        }
+      },
+      "parameters": {
+        "sendTo": "__SALES_EMAIL__",
+        "subject": "={{ $json.tier_emoji }} {{ $json.tier.toUpperCase() }} lead {{ $json.score }}/100 — {{ $json.name }}{{ $json.company ? ' (' + $json.company + ')' : '' }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:system-ui,sans-serif;max-width:640px\">\n<h2 style=\"margin:0 0 4px\">{{ $json.tier_emoji }} {{ $json.tier.toUpperCase() }} lead · {{ $json.score }}/100</h2>\n<p style=\"color:#555;margin:0 0 16px\">{{ $json.reasoning }}</p>\n<table cellpadding=\"6\" style=\"border-collapse:collapse;font-size:14px\">\n<tr><td><b>Name</b></td><td>{{ $json.name }}</td></tr>\n<tr><td><b>Company</b></td><td>{{ $json.company || '—' }}</td></tr>\n<tr><td><b>Email</b></td><td>{{ $json.email || '—' }}</td></tr>\n<tr><td><b>Phone</b></td><td>{{ $json.caller_number }}</td></tr>\n<tr><td><b>Need</b></td><td>{{ $json.need }} — {{ $json.need_details }}</td></tr>\n<tr><td><b>Budget</b></td><td>{{ $json.budget_label }}</td></tr>\n<tr><td><b>Timeline</b></td><td>{{ $json.timeline_label }}</td></tr>\n<tr><td><b>Decision maker</b></td><td>{{ $json.decision_maker ? 'Yes' : 'No' }}</td></tr>\n<tr><td><b>Meeting</b></td><td>{{ $json.booking_confirmed ? $json.booked_slot : 'Not booked — send two slots' }}</td></tr>\n</table>\n<h3>Summary</h3><p>{{ $json.summary }}</p>\n<h3>Next action</h3><p>{{ $json.next_action }}</p>\n<p style=\"font-size:12px;color:#888\">Call {{ $json.call_id }} · {{ $json.call_type }} · {{ $json.duration_sec }}s · ${{ $json.cost_usd }} · <a href=\"{{ $json.recording_url }}\">recording</a></p>\n<details><summary style=\"cursor:pointer\">Transcript</summary><pre style=\"white-space:pre-wrap;font-size:12px\">{{ $json.transcript }}</pre></details>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      }
+    },
+    {
+      "id": "n10",
+      "name": "Ignore Other Events",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        440,
+        520
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Vapi End-of-Call": {
+      "main": [
+        [
+          {
+            "node": "Is End-of-Call Report?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is End-of-Call Report?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ignore Other Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead": {
+      "main": [
+        [
+          {
+            "node": "Score Lead (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Merge Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Score": {
+      "main": [
+        [
+          {
+            "node": "HubSpot — Upsert Contact",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sheets — Append Lead",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack — Lead Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail — Lead Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
