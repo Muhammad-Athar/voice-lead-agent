@@ -1,0 +1,40 @@
+[
+  {
+    "type": "function",
+    "async": false,
+    "function": {
+      "name": "check_availability",
+      "description": "Get up to three open 20-minute discovery-call slots from the sales calendar for the next five business days. Call this once you have the caller's email. Returns slot labels and slot_id values.",
+      "parameters": { "type": "object", "properties": {}, "required": [] }
+    },
+    "messages": [
+      { "type": "request-start", "content": "Let me check the calendar, one moment." },
+      { "type": "request-failed", "content": "I couldn't reach the calendar just now — I'll have the team email you two time options instead." }
+    ],
+    "server": { "url": "__N8N_WEBHOOK_BASE__/vapi-tools", "timeoutSeconds": 20 }
+  },
+  {
+    "type": "function",
+    "async": false,
+    "function": {
+      "name": "book_slot",
+      "description": "Book the discovery call in the chosen slot and send the caller a calendar invite. Use the exact slot_id returned by check_availability.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "slot_id": { "type": "string", "description": "The slot_id (ISO 8601 datetime) of the chosen slot from check_availability" },
+          "name": { "type": "string", "description": "Caller's full name" },
+          "company": { "type": "string", "description": "Caller's company, if any" },
+          "email": { "type": "string", "description": "Caller's email address for the invite" },
+          "need": { "type": "string", "description": "One-line summary of what they want built" }
+        },
+        "required": ["slot_id", "name", "email"]
+      }
+    },
+    "messages": [
+      { "type": "request-start", "content": "Booking that for you now." },
+      { "type": "request-failed", "content": "The booking didn't go through — I'll have the team confirm the time by email." }
+    ],
+    "server": { "url": "__N8N_WEBHOOK_BASE__/vapi-tools", "timeoutSeconds": 20 }
+  }
+]

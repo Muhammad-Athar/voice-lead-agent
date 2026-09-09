@@ -1,0 +1,333 @@
+{
+  "id": "VoiceLeadTool001",
+  "name": "Voice Lead — Calendar Tools (Vapi)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "t1",
+      "name": "Vapi Tool Call",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "vapi-tools",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-tools",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "t2",
+      "name": "Parse Tool Call",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\nconst msg = body.message || {};\nconst calls = msg.toolCallList || (msg.toolWithToolCallList || []).map(t => t.toolCall) || [];\nif (!calls.length) return [{ json: { tool: 'none', toolCallId: null, args: {}, error: 'no toolCallList in payload' } }];\nconst c = calls[0];\nlet args = (c.function && c.function.arguments) || c.arguments || {};\nif (typeof args === 'string') { try { args = JSON.parse(args); } catch (e) { args = {}; } }\nreturn [{ json: { tool: (c.function && c.function.name) || c.name, toolCallId: c.id, args, callId: msg.call && msg.call.id } }];"
+      }
+    },
+    {
+      "id": "t3",
+      "name": "Which Tool?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r1",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "check_availability",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check_availability"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "r2",
+                    "leftValue": "={{ $json.tool }}",
+                    "rightValue": "book_slot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "book_slot"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "t4",
+      "name": "Calendar — Get Busy Times",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        680,
+        160
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "__GCAL_CRED_ID__",
+          "name": "GCal — Voice Leads"
+        }
+      },
+      "parameters": {
+        "resource": "event",
+        "operation": "getAll",
+        "returnAll": true,
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "__SALES_CALENDAR_ID__"
+        },
+        "timeMin": "={{ $now.toISO() }}",
+        "timeMax": "={{ $now.plus({ days: 5 }).toISO() }}",
+        "options": {
+          "singleEvents": true,
+          "orderBy": "startTime"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "t5",
+      "name": "Compute Free Slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        160
+      ],
+      "parameters": {
+        "jsCode": "// Business hours 10:00–17:00 America/New_York, Mon–Fri, 30-min slots, next 5 days, skip busy events.\nconst TZ = 'America/New_York';\nconst busy = $input.all().map(i => i.json).filter(e => e && (e.start || e.end)).map(e => ({\n  s: new Date(e.start && (e.start.dateTime || e.start.date)), e: new Date(e.end && (e.end.dateTime || e.end.date)) }));\nconst toolCallId = $('Parse Tool Call').first().json.toolCallId;\nconst fmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });\nconst hourIn = (d) => Number(new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', hour12: false }).format(d));\nconst dowIn = (d) => new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(d);\nconst slots = [];\nlet t = new Date(Date.now() + 2 * 3600 * 1000); t.setUTCMinutes(t.getUTCMinutes() < 30 ? 30 : 60, 0, 0);\nconst end = new Date(Date.now() + 5 * 86400 * 1000);\nwhile (t < end && slots.length < 6) {\n  const h = hourIn(t), dow = dowIn(t);\n  const slotEnd = new Date(t.getTime() + 30 * 60000);\n  const clash = busy.some(b => b.s < slotEnd && b.e > t);\n  if (!['Sat','Sun'].includes(dow) && h >= 10 && h < 17 && !clash) slots.push({ start: t.toISOString(), end: slotEnd.toISOString(), label: fmt.format(t) + ' Eastern' });\n  t = new Date(t.getTime() + 30 * 60000);\n}\n// Spread offers across days: keep first of each day up to 3, then fill\nconst byDay = {}; for (const s of slots) { const d = s.label.split(',').slice(0,2).join(','); (byDay[d] = byDay[d] || []).push(s); }\nconst offer = Object.values(byDay).map(a => a[0]).slice(0, 3);\nconst result = offer.length ? `Available 20-minute slots (Eastern time): ${offer.map((s, i) => `${i + 1}) ${s.label} [slot_id=${s.start}]`).join('; ')}. Offer the caller two of these.` : 'No open slots in the next five days.';\nreturn [{ json: { toolCallId, result, slots: offer } }];"
+      }
+    },
+    {
+      "id": "t6",
+      "name": "Calendar — Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        680,
+        440
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "__GCAL_CRED_ID__",
+          "name": "GCal — Voice Leads"
+        }
+      },
+      "parameters": {
+        "resource": "event",
+        "operation": "create",
+        "calendar": {
+          "__rl": true,
+          "mode": "list",
+          "value": "__SALES_CALENDAR_ID__"
+        },
+        "start": "={{ $json.args.slot_id }}",
+        "end": "={{ DateTime.fromISO($json.args.slot_id).plus({ minutes: 20 }).toISO() }}",
+        "additionalFields": {
+          "summary": "=Discovery call — {{ $json.args.name || 'Voice lead' }}{{ $json.args.company ? ' (' + $json.args.company + ')' : '' }}",
+          "description": "=Booked by Ava (voice agent).\nNeed: {{ $json.args.need || 'n/a' }}\nEmail: {{ $json.args.email || 'n/a' }}\nVapi call: {{ $json.callId }}",
+          "attendees": "={{ $json.args.email ? [$json.args.email] : [] }}",
+          "sendUpdates": "all"
+        }
+      }
+    },
+    {
+      "id": "t7",
+      "name": "Booking Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        440
+      ],
+      "parameters": {
+        "jsCode": "const ev = $input.first().json || {};\nconst p = $('Parse Tool Call').first().json;\nconst ok = !!(ev.id && ev.htmlLink);\nlet label = p.args.slot_id;\ntry { label = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(p.args.slot_id)) + ' Eastern'; } catch (e) {}\nconst result = ok ? `Booked: ${label}. A calendar invite has been sent to ${p.args.email || 'the caller'}.` : `Booking failed: ${ev.message || ev.error || 'calendar error'}. Tell the caller the team will email two time options.`;\nreturn [{ json: { toolCallId: p.toolCallId, result, booked: ok, eventLink: ev.htmlLink || null } }];"
+      }
+    },
+    {
+      "id": "t8",
+      "name": "Unknown Tool",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        620
+      ],
+      "parameters": {
+        "jsCode": "const p = $input.first().json;\nreturn [{ json: { toolCallId: p.toolCallId, result: `Unknown tool ${p.tool}` } }];"
+      }
+    },
+    {
+      "id": "t9",
+      "name": "Respond to Vapi",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1140,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ results: [ { toolCallId: $json.toolCallId, result: $json.result } ] }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Vapi Tool Call": {
+      "main": [
+        [
+          {
+            "node": "Parse Tool Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Tool Call": {
+      "main": [
+        [
+          {
+            "node": "Which Tool?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Which Tool?": {
+      "main": [
+        [
+          {
+            "node": "Calendar — Get Busy Times",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calendar — Create Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar — Get Busy Times": {
+      "main": [
+        [
+          {
+            "node": "Compute Free Slots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Free Slots": {
+      "main": [
+        [
+          {
+            "node": "Respond to Vapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar — Create Event": {
+      "main": [
+        [
+          {
+            "node": "Booking Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Result": {
+      "main": [
+        [
+          {
+            "node": "Respond to Vapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unknown Tool": {
+      "main": [
+        [
+          {
+            "node": "Respond to Vapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

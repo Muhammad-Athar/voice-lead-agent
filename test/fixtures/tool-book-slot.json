@@ -1,0 +1,1 @@
+{"message":{"type":"tool-calls","call":{"id":"test-call-1"},"toolCallList":[{"id":"call_def456","type":"function","function":{"name":"book_slot","arguments":{"slot_id":"__SLOT_ID__","name":"Sarah Khan","company":"Bloom Bakery","email":"muhammadathar27dd@gmail.com","need":"Order-taking chatbot for the website"}}}]}}

@@ -7,6 +7,8 @@ Usage:
   scripts/vapi.py get-assistant         # print the live assistant config
   scripts/vapi.py list-calls [n]        # last n calls with analysis (default 5)
   scripts/vapi.py get-call <id>         # full call object
+  scripts/vapi.py register-tools        # create/update function tools from vapi/tools.json (uses N8N_WEBHOOK_BASE), attach to assistant
+  scripts/vapi.py enable-booking        # restore the real booking section in the system prompt (after tools are registered)
 """
 import json, os, sys, urllib.request, urllib.error
 from pathlib import Path
@@ -79,10 +81,42 @@ def get_call(cid):
     print(json.dumps(req("GET", f"/call/{cid}"), indent=2))
 
 
+def register_tools():
+    base = os.environ.get("N8N_WEBHOOK_BASE", "").rstrip("/")
+    if not base: print("N8N_WEBHOOK_BASE not set in .env"); sys.exit(1)
+    tools = json.loads((ROOT / "vapi" / "tools.json").read_text().replace("__N8N_WEBHOOK_BASE__", base))
+    existing = {t.get("function", {}).get("name"): t for t in req("GET", "/tool") if t.get("type") == "function"}
+    ids = []
+    for t in tools:
+        name = t["function"]["name"]
+        if name in existing:
+            body = {k: v for k, v in t.items() if k != "type"}
+            r = req("PATCH", f"/tool/{existing[name]['id']}", body); print("updated tool", name, r["id"])
+        else:
+            r = req("POST", "/tool", t); print("created tool", name, r["id"])
+        ids.append(r["id"])
+    aid = ID_FILE.read_text().strip()
+    a = req("GET", f"/assistant/{aid}")
+    model = a["model"]; model["toolIds"] = ids
+    req("PATCH", f"/assistant/{aid}", {"model": model})
+    print("assistant toolIds set:", ids)
+
+
+def enable_booking():
+    cfg_path = ROOT / "vapi" / "assistant.json"; cfg = json.loads(cfg_path.read_text())
+    c = cfg["model"]["messages"][0]["content"]
+    booking = (ROOT / "vapi" / "prompt-booking-section.txt").read_text()
+    i, j = c.index("# Booking"), c.index("# Style rules")
+    cfg["model"]["messages"][0]["content"] = c[:i] + booking + c[j:]
+    cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False))
+    print("booking section restored in vapi/assistant.json — now run upsert-assistant")
+
+
 if __name__ == "__main__":
     load_env()
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     {"register-gemini": register_gemini, "upsert-assistant": upsert_assistant,
      "get-assistant": get_assistant,
      "list-calls": lambda: list_calls(int(sys.argv[2]) if len(sys.argv) > 2 else 5),
-     "get-call": lambda: get_call(sys.argv[2])}.get(cmd, lambda: print(__doc__))()
+     "get-call": lambda: get_call(sys.argv[2]),
+     "register-tools": register_tools, "enable-booking": enable_booking}.get(cmd, lambda: print(__doc__))()

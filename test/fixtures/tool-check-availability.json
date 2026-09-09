@@ -1,0 +1,1 @@
+{"message":{"type":"tool-calls","call":{"id":"test-call-1"},"toolCallList":[{"id":"call_abc123","type":"function","function":{"name":"check_availability","arguments":{}}}]}}
