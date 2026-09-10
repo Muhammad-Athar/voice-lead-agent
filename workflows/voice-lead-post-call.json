@@ -105,7 +105,11 @@
           "temperature": 0.2,
           "maxOutputTokens": 300
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 4000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "n5",

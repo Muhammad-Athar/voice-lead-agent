@@ -99,6 +99,8 @@ def register_tools():
     a = req("GET", f"/assistant/{aid}")
     model = a["model"]; model["toolIds"] = ids
     req("PATCH", f"/assistant/{aid}", {"model": model})
+    cfg_path = ROOT / "vapi" / "assistant.json"; cfg = json.loads(cfg_path.read_text())
+    cfg["model"]["toolIds"] = ids; cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False))
     print("assistant toolIds set:", ids)
 
 
