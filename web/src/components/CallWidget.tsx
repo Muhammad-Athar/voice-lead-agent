@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Vapi from "@vapi-ai/web";
+import { Waveform } from "./motion";
 
 type Line = { role: "assistant" | "user"; text: string };
 type Stage = "idle" | "connecting" | "live" | "ended" | "error";
@@ -15,13 +17,7 @@ const STEPS = [
 ] as const;
 type StepKey = (typeof STEPS)[number]["key"];
 
-export default function CallWidget({
-  publicKey,
-  assistantId,
-}: {
-  publicKey: string;
-  assistantId: string;
-}) {
+export default function CallWidget({ publicKey, assistantId }: { publicKey: string; assistantId: string }) {
   const vapiRef = useRef<Vapi | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [speaking, setSpeaking] = useState(false);
@@ -45,14 +41,13 @@ export default function CallWidget({
       const type = m.type as string;
       if (type === "transcript" && m.transcriptType === "final") {
         const role = m.role === "assistant" ? "assistant" : "user";
-        const text = String(m.transcript ?? "");
-        setLines((l) => [...l, { role, text }]);
+        setLines((l) => [...l, { role, text: String(m.transcript ?? "") }]);
         if (role === "user") mark("qualify");
       }
       if (type === "tool-calls" || type === "function-call") {
-        const names = JSON.stringify(m).toLowerCase();
-        if (names.includes("check_availability")) mark("availability");
-        if (names.includes("book_slot")) mark("book");
+        const s = JSON.stringify(m).toLowerCase();
+        if (s.includes("check_availability")) mark("availability");
+        if (s.includes("book_slot")) mark("book");
       }
     });
     return () => { vapi.stop(); };
@@ -73,67 +68,87 @@ export default function CallWidget({
   const stop = () => vapiRef.current?.stop();
 
   const busy = stage === "connecting" || stage === "live";
-  const mm = String(Math.floor(seconds / 60)).padStart(1, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
+  const clock = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       {/* Call panel */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/80">Live demo</p>
-            <h3 className="mt-1 text-xl font-semibold text-white">Talk to Ava in your browser</h3>
-            <p className="mt-1 text-sm text-white/60">Pretend you&apos;re a business that needs a website, chatbot or automation. She&apos;ll qualify you and book a slot. Calls are capped at 3 minutes.</p>
-          </div>
-          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
-            {busy && <span className={`absolute inset-0 rounded-full bg-amber-400/20 ${speaking ? "animate-ping" : ""}`} />}
-            <span className={`relative flex h-12 w-12 items-center justify-center rounded-full text-2xl ${busy ? "bg-amber-400 text-black" : "bg-white/10 text-white/70"}`}>
-              {busy ? "🎙" : "📞"}
-            </span>
-          </div>
-        </div>
+      <motion.div layout className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur sm:p-8">
+        <motion.div aria-hidden className="pointer-events-none absolute -inset-px rounded-3xl" animate={{ opacity: busy ? 1 : 0 }}
+          style={{ background: "linear-gradient(120deg, rgba(251,191,36,.25), transparent 40%, transparent 60%, rgba(251,191,36,.25))" }} />
+        <div className="relative">
+          <p className="text-xs uppercase tracking-[0.25em] text-amber-300/80">Live demo</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">Talk to Ava in your browser</h3>
+          <p className="mt-2 max-w-lg text-sm text-white/60">
+            Pretend you&apos;re a business that needs a website, chatbot or automation. Ava will qualify you and book a real slot. Demo calls are capped at 3 minutes.
+          </p>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          {!busy ? (
-            <button onClick={start} className="rounded-full bg-amber-400 px-6 py-3 text-sm font-semibold text-black transition hover:bg-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-300/60">
-              {stage === "ended" ? "Call again" : "Start a call"}
-            </button>
-          ) : (
-            <button onClick={stop} className="rounded-full bg-red-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-400">Hang up</button>
-          )}
-          <span className="text-sm text-white/60">
-            {stage === "idle" && "Microphone permission will be requested."}
-            {stage === "connecting" && "Connecting…"}
-            {stage === "live" && (speaking ? `Ava is speaking · ${mm}:${ss}` : `Listening · ${mm}:${ss}`)}
-            {stage === "ended" && `Call ended after ${mm}:${ss}. Check the pipeline →`}
-            {stage === "error" && `Error: ${error}`}
-          </span>
-        </div>
-
-        <div ref={logRef} className="mt-6 h-64 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-black/40 p-4 text-sm">
-          {lines.length === 0 && <p className="text-white/40">Transcript appears here in real time.</p>}
-          {lines.map((l, i) => (
-            <p key={i} className={l.role === "assistant" ? "text-amber-200" : "text-white/80"}>
-              <span className="mr-2 text-xs uppercase tracking-wider text-white/40">{l.role === "assistant" ? "Ava" : "You"}</span>
-              {l.text}
+          <div className="mt-6 rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+            <Waveform active={busy && speaking} />
+            <p className="mt-1 text-center text-xs text-white/50">
+              {stage === "idle" && "Ready — microphone permission will be requested"}
+              {stage === "connecting" && "Connecting…"}
+              {stage === "live" && (speaking ? `Ava is speaking · ${clock}` : `Listening · ${clock}`)}
+              {stage === "ended" && `Call ended · ${clock} · watch the pipeline →`}
+              {stage === "error" && `Error: ${error}`}
             </p>
-          ))}
+          </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <AnimatePresence mode="wait" initial={false}>
+              {!busy ? (
+                <motion.button key="start" onClick={start} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                  className="relative rounded-full bg-amber-400 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_40px_-8px_rgba(251,191,36,0.8)] focus:outline-none focus:ring-2 focus:ring-amber-300/60">
+                  {stage === "ended" ? "Call again" : "🎙 Start a call"}
+                </motion.button>
+              ) : (
+                <motion.button key="stop" onClick={stop} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                  whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                  className="rounded-full bg-red-500 px-7 py-3 text-sm font-semibold text-white">
+                  Hang up
+                </motion.button>
+              )}
+            </AnimatePresence>
+            {busy && (
+              <span className="flex items-center gap-2 text-xs text-white/60">
+                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" /><span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" /></span>
+                live
+              </span>
+            )}
+          </div>
+
+          <div ref={logRef} className="mt-6 h-60 space-y-2 overflow-y-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-sm">
+            {lines.length === 0 && <p className="text-white/40">Transcript appears here in real time.</p>}
+            <AnimatePresence initial={false}>
+              {lines.map((l, i) => (
+                <motion.p key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+                  className={l.role === "assistant" ? "text-amber-200" : "text-white/80"}>
+                  <span className="mr-2 text-[10px] uppercase tracking-wider text-white/40">{l.role === "assistant" ? "Ava" : "You"}</span>
+                  {l.text}
+                </motion.p>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Pipeline tracker */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-white/50">Behind the scenes</p>
-        <ol className="mt-4 space-y-4">
+      <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <p className="text-xs uppercase tracking-[0.25em] text-white/50">Behind the scenes</p>
+        <ol className="relative mt-5 space-y-5">
+          <span aria-hidden className="absolute left-3 top-3 h-[calc(100%-1.5rem)] w-px bg-white/10" />
           {STEPS.map((s, i) => {
             const isDone = done.has(s.key);
             const isNext = !isDone && STEPS.slice(0, i).every((p) => done.has(p.key)) && busy;
             return (
-              <li key={s.key} className="flex gap-3">
-                <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isDone ? "bg-emerald-400 text-black" : isNext ? "bg-amber-400/80 text-black animate-pulse" : "bg-white/10 text-white/50"}`}>
+              <li key={s.key} className="relative flex gap-4">
+                <motion.span
+                  animate={isDone ? { backgroundColor: "#34d399", color: "#000", scale: [1, 1.25, 1] } : isNext ? { backgroundColor: "rgba(251,191,36,0.9)", color: "#000" } : { backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
+                  transition={{ duration: 0.4 }}
+                  className={`relative z-10 mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isNext ? "animate-pulse" : ""}`}>
                   {isDone ? "✓" : i + 1}
-                </span>
+                </motion.span>
                 <div>
                   <p className={`text-sm font-medium ${isDone ? "text-white" : "text-white/70"}`}>{s.label}</p>
                   <p className="text-xs text-white/40">{s.hint}</p>
@@ -142,8 +157,8 @@ export default function CallWidget({
             );
           })}
         </ol>
-        <p className="mt-6 text-xs text-white/40">
-          Within ~60 s of hang-up the lead is scored 0–100 by Gemini and pushed to HubSpot, a Google Sheet, Slack and the sales inbox. The n8n workflows run on a self-hosted instance.
+        <p className="mt-6 text-xs leading-relaxed text-white/40">
+          Within ~60 s of hang-up the lead is scored 0–100 by Gemini and pushed to HubSpot, a Google Sheet, Slack and the sales inbox. Workflows run on a self-hosted n8n.
         </p>
       </div>
     </div>
