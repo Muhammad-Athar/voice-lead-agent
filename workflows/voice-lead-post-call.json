@@ -102,7 +102,9 @@
         "jsonOutput": true,
         "options": {
           "temperature": 0.2,
-          "maxOutputTokens": 300
+          "maxOutputTokens": 1024,
+          "thinkingBudget": 0,
+          "systemMessage": "You are a sales-lead scoring engine. Respond with ONLY a single JSON object — no prose, no markdown fences."
         }
       },
       "retryOnFail": true,
@@ -120,7 +122,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "const lead = $('Normalize Lead').first().json;\nconst raw = $input.first().json;\n// Find the model text in whatever shape the Gemini node returned\nlet text = '';\nif (typeof raw === 'string') text = raw;\nelse if (raw.content && raw.content.parts) text = raw.content.parts.map(p => p.text || '').join('');\nelse if (raw.candidates) text = ((raw.candidates[0] || {}).content || {}).parts?.map(p => p.text || '').join('') || '';\nelse if (typeof raw.text === 'string') text = raw.text;\nelse if (raw.score !== undefined) text = JSON.stringify(raw);\nelse text = JSON.stringify(raw);\nlet parsed = {};\ntry { parsed = JSON.parse(text); } catch (e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/); if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) {} }\n}\nlet score = Number(parsed.score);\nif (!Number.isFinite(score)) {\n  // deterministic fallback so the pipeline never stalls\n  score = 20 + (lead.budget_band === 'over_10k' ? 35 : lead.budget_band === '2k_to_10k' ? 25 : 0)\n        + (lead.timeline === 'asap' ? 20 : lead.timeline === 'this_quarter' ? 10 : 0)\n        + (lead.decision_maker ? 15 : 0) + (lead.booking_confirmed ? 10 : 0);\n  if (lead.not_a_fit) score = 5;\n}\nscore = Math.max(0, Math.min(100, Math.round(score)));\nconst tier = ['hot','warm','cold'].includes(parsed.tier) ? parsed.tier : (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');\nconst emoji = { hot: '🔥', warm: '🌤️', cold: '🧊' }[tier];\nreturn [{ json: { ...lead, score, tier, tier_emoji: emoji,\n  reasoning: parsed.reasoning || 'Scored by fallback rules (model output unparseable).',\n  next_action: parsed.next_action || 'Review transcript and follow up by email.',\n  scored_at: new Date().toISOString() } }];"
+        "jsCode": "const lead = $('Normalize Lead').first().json;\nconst raw = $input.first().json;\n// Find the model text in whatever shape the Gemini node returned\nlet text = \"\";\nconst collect = (o) => { if (!o) return; if (typeof o === \"string\") text += o + \"\\n\";\n  else if (Array.isArray(o)) o.forEach(collect);\n  else if (typeof o === \"object\") { if (typeof o.text === \"string\") text += o.text + \"\\n\"; for (const k of [\"content\",\"parts\",\"candidates\",\"message\",\"output\"]) if (o[k]) collect(o[k]); } };\ncollect(raw);\nif (raw && raw.score !== undefined) text = JSON.stringify(raw);\ntext = text.replace(/```json|```/g, \"\");\nlet parsed = {};\ntry { parsed = JSON.parse(text); } catch (e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/); if (m) { try { parsed = JSON.parse(m[0]); } catch (e2) {} }\n}\nlet score = Number(parsed.score);\nif (!Number.isFinite(score)) {\n  // deterministic fallback so the pipeline never stalls\n  score = 20 + (lead.budget_band === 'over_10k' ? 35 : lead.budget_band === '2k_to_10k' ? 25 : 0)\n        + (lead.timeline === 'asap' ? 20 : lead.timeline === 'this_quarter' ? 10 : 0)\n        + (lead.decision_maker ? 15 : 0) + (lead.booking_confirmed ? 10 : 0);\n  if (lead.not_a_fit) score = 5;\n}\nscore = Math.max(0, Math.min(100, Math.round(score)));\nconst tier = ['hot','warm','cold'].includes(parsed.tier) ? parsed.tier : (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');\nconst emoji = { hot: '🔥', warm: '🌤️', cold: '🧊' }[tier];\nreturn [{ json: { ...lead, score, tier, tier_emoji: emoji,\n  reasoning: parsed.reasoning || 'Scored by fallback rules (model output unparseable).',\n  next_action: parsed.next_action || 'Review transcript and follow up by email.',\n  scored_at: new Date().toISOString() } }];"
       }
     },
     {
