@@ -11,7 +11,6 @@ export const fadeUp: Variants = {
   }),
 };
 
-/** Fade-up on scroll. */
 export function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   return (
     <motion.div className={className} variants={fadeUp} custom={delay} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
@@ -20,21 +19,30 @@ export function Reveal({ children, className = "", delay = 0 }: { children: Reac
   );
 }
 
-/** Card that lifts and glows on hover. */
+/** Glass card with lift, cursor-tracking glow and a gradient border on hover. */
 export function HoverCard({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
   return (
     <motion.div
-      className={`group relative rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-colors ${className}`}
-      whileHover={{ y: -6, borderColor: "rgba(251,191,36,0.45)" }}
+      ref={ref}
+      onMouseMove={(e) => {
+        const r = ref.current?.getBoundingClientRect(); if (!r || !ref.current) return;
+        ref.current.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        ref.current.style.setProperty("--my", `${e.clientY - r.top}px`);
+      }}
+      className={`group glass relative overflow-hidden rounded-2xl p-6 ${className}`}
+      whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={{ background: "radial-gradient(400px circle at var(--mx,50%) var(--my,50%), rgba(251,191,36,0.10), transparent 60%)" }} />
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: "radial-gradient(420px circle at var(--mx,50%) var(--my,50%), color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%)" }} />
+      <div aria-hidden className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ padding: 1, background: "linear-gradient(120deg, var(--accent), var(--accent-2))", WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude" }} />
       <div className="relative">{children}</div>
     </motion.div>
   );
 }
 
-/** Animated number that counts up when scrolled into view. */
 export function CountUp({ value, prefix = "", suffix = "", decimals = 0 }: { value: number; prefix?: string; suffix?: string; decimals?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
@@ -45,35 +53,46 @@ export function CountUp({ value, prefix = "", suffix = "", decimals = 0 }: { val
   return <span ref={ref}>{prefix}{(0).toFixed(decimals)}{suffix}</span>;
 }
 
-/** Ambient animated background: drifting gradient orbs + faint grid. */
+/** Ambient background: drifting gradient orbs + faint grid + noise. */
 export function Background() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <div className="absolute inset-0 bg-[#0b0b0f]" />
-      <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)", backgroundSize: "64px 64px", maskImage: "radial-gradient(ellipse at top, black 20%, transparent 70%)" }} />
-      <motion.div className="absolute -top-32 left-1/2 h-[560px] w-[560px] -translate-x-1/2 rounded-full bg-amber-400/20 blur-[120px]"
-        animate={{ x: [-40, 40, -40], y: [0, 30, 0], scale: [1, 1.08, 1] }} transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }} />
-      <motion.div className="absolute top-1/3 -left-40 h-[420px] w-[420px] rounded-full bg-fuchsia-500/10 blur-[120px]"
-        animate={{ x: [0, 60, 0], y: [0, -40, 0] }} transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }} />
-      <motion.div className="absolute bottom-0 -right-32 h-[480px] w-[480px] rounded-full bg-sky-500/10 blur-[120px]"
-        animate={{ x: [0, -50, 0], y: [0, -30, 0] }} transition={{ duration: 26, repeat: Infinity, ease: "easeInOut" }} />
+      <div className="absolute inset-0 bg-[#07070d]" />
+      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)", backgroundSize: "72px 72px", maskImage: "radial-gradient(ellipse at top, black 15%, transparent 65%)" }} />
+      <motion.div className="absolute -top-40 left-1/3 h-[640px] w-[640px] rounded-full bg-accent/25 blur-[140px]"
+        animate={{ x: [-60, 60, -60], y: [0, 40, 0], scale: [1, 1.1, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.div className="absolute top-1/4 -right-40 h-[520px] w-[520px] rounded-full bg-accent-2/15 blur-[140px]"
+        animate={{ x: [0, -70, 0], y: [0, 60, 0] }} transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.div className="absolute bottom-0 -left-40 h-[480px] w-[480px] rounded-full bg-fuchsia-500/10 blur-[140px]"
+        animate={{ x: [0, 80, 0], y: [0, -40, 0] }} transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }} />
     </div>
   );
 }
 
-/** Audio-style waveform: bars dance while `active`, rest flat otherwise. */
-export function Waveform({ active, bars = 24 }: { active: boolean; bars?: number }) {
+/** Audio-style waveform. */
+export function Waveform({ active, bars = 28 }: { active: boolean; bars?: number }) {
   return (
     <div className="flex h-12 items-center justify-center gap-[3px]">
       {Array.from({ length: bars }).map((_, i) => {
         const peak = 0.35 + Math.abs(Math.sin(i * 1.7)) * 0.65;
         return (
-          <motion.span key={i} className="w-[3px] rounded-full bg-amber-300"
+          <motion.span key={i} className="w-[3px] rounded-full bg-gradient-to-t from-accent to-accent-2"
             animate={active ? { scaleY: [0.2, peak, 0.3, peak * 0.8, 0.2] } : { scaleY: 0.15 }}
             transition={active ? { duration: 0.9 + (i % 5) * 0.12, repeat: Infinity, ease: "easeInOut", delay: (i % 7) * 0.05 } : { duration: 0.4 }}
             style={{ height: 40, transformOrigin: "center" }} />
         );
       })}
     </div>
+  );
+}
+
+/** Primary gradient button with glow. */
+export function GlowButton({ children, href, onClick, className = "" }: { children: ReactNode; href?: string; onClick?: () => void; className?: string }) {
+  const cls = `relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_0_50px_-10px_var(--accent)] transition ${className}`;
+  const inner = <span className="relative">{children}</span>;
+  return href ? (
+    <motion.a href={href} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className={cls}>{inner}</motion.a>
+  ) : (
+    <motion.button onClick={onClick} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} className={cls}>{inner}</motion.button>
   );
 }

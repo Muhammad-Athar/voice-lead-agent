@@ -73,11 +73,11 @@ export default function CallWidget({ publicKey, assistantId }: { publicKey: stri
   return (
     <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       {/* Call panel */}
-      <motion.div layout className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur sm:p-8">
+      <motion.div layout className="glass relative overflow-hidden rounded-3xl p-6 sm:p-8">
         <motion.div aria-hidden className="pointer-events-none absolute -inset-px rounded-3xl" animate={{ opacity: busy ? 1 : 0 }}
-          style={{ background: "linear-gradient(120deg, rgba(251,191,36,.25), transparent 40%, transparent 60%, rgba(251,191,36,.25))" }} />
+          style={{ background: "linear-gradient(120deg, color-mix(in oklab, var(--accent) 35%, transparent), transparent 40%, transparent 60%, color-mix(in oklab, var(--accent-2) 35%, transparent))" }} />
         <div className="relative">
-          <p className="text-xs uppercase tracking-[0.25em] text-amber-300/80">Live demo</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-accent-2/80">Live demo</p>
           <h3 className="mt-2 text-2xl font-semibold text-white">Talk to Ava in your browser</h3>
           <p className="mt-2 max-w-lg text-sm text-white/60">
             Pretend you&apos;re a business that needs a website, chatbot or automation. Ava will qualify you and book a real slot. Demo calls are capped at 3 minutes.
@@ -99,7 +99,7 @@ export default function CallWidget({ publicKey, assistantId }: { publicKey: stri
               {!busy ? (
                 <motion.button key="start" onClick={start} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                   whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                  className="relative rounded-full bg-amber-400 px-7 py-3 text-sm font-semibold text-black shadow-[0_0_40px_-8px_rgba(251,191,36,0.8)] focus:outline-none focus:ring-2 focus:ring-amber-300/60">
+                  className="relative rounded-full bg-gradient-to-r from-accent to-accent-2 px-7 py-3 text-sm font-semibold text-white shadow-[0_0_40px_-8px_var(--accent)] focus:outline-none focus:ring-2 focus:ring-accent-2/60">
                   {stage === "ended" ? "Call again" : "🎙 Start a call"}
                 </motion.button>
               ) : (
@@ -123,7 +123,7 @@ export default function CallWidget({ publicKey, assistantId }: { publicKey: stri
             <AnimatePresence initial={false}>
               {lines.map((l, i) => (
                 <motion.p key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
-                  className={l.role === "assistant" ? "text-amber-200" : "text-white/80"}>
+                  className={l.role === "assistant" ? "text-accent-2/90" : "text-white/80"}>
                   <span className="mr-2 text-[10px] uppercase tracking-wider text-white/40">{l.role === "assistant" ? "Ava" : "You"}</span>
                   {l.text}
                 </motion.p>
@@ -134,7 +134,7 @@ export default function CallWidget({ publicKey, assistantId }: { publicKey: stri
       </motion.div>
 
       {/* Pipeline tracker */}
-      <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+      <div className="glass rounded-3xl p-6 sm:p-8">
         <p className="text-xs uppercase tracking-[0.25em] text-white/50">Behind the scenes</p>
         <ol className="relative mt-5 space-y-5">
           <span aria-hidden className="absolute left-3 top-3 h-[calc(100%-1.5rem)] w-px bg-white/10" />
@@ -144,7 +144,7 @@ export default function CallWidget({ publicKey, assistantId }: { publicKey: stri
             return (
               <li key={s.key} className="relative flex gap-4">
                 <motion.span
-                  animate={isDone ? { backgroundColor: "#34d399", color: "#000", scale: [1, 1.25, 1] } : isNext ? { backgroundColor: "rgba(251,191,36,0.9)", color: "#000" } : { backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
+                  animate={isDone ? { backgroundColor: "#34d399", color: "#000", scale: [1, 1.25, 1] } : isNext ? { backgroundColor: "var(--accent)", color: "#fff" } : { backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}
                   transition={{ duration: 0.4 }}
                   className={`relative z-10 mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isNext ? "animate-pulse" : ""}`}>
                   {isDone ? "✓" : i + 1}
