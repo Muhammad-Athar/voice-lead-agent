@@ -3,8 +3,7 @@
   "name": "Voice Lead — Post-Call Pipeline",
   "active": false,
   "settings": {
-    "executionOrder": "v1",
-    "errorWorkflow": "ExpFlowError0001"
+    "executionOrder": "v1"
   },
   "nodes": [
     {

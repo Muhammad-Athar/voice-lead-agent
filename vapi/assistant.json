@@ -65,7 +65,7 @@
         },
         {
           "role": "user",
-          "content": "Here is the transcript:\n\n{{transcript}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n"
+          "content": "Here is the transcript:\n\n{{transcript}}\n\nHere are the full call messages including tool calls and tool results (use these for exact values such as slot_id and email):\n\n{{messages}}\n\nHere is the ended reason of the call:\n\n{{endedReason}}\n\n"
         }
       ],
       "schema": {
@@ -113,14 +113,15 @@
             "type": "boolean"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "Prefer the email argument passed to book_slot if present; otherwise the email spoken by the caller."
           },
           "booking_confirmed": {
             "type": "boolean"
           },
           "booked_slot": {
             "type": "string",
-            "description": "ISO 8601 datetime of the booked slot, or null"
+            "description": "If book_slot was called successfully, copy its slot_id argument VERBATIM (ISO 8601 UTC, e.g. 2026-09-11T15:00:00.000Z). Otherwise null."
           },
           "not_a_fit": {
             "type": "boolean",
