@@ -29,7 +29,7 @@ Production details clients care about
 
 Result: a lead is qualified, booked and in the CRM in about 2 minutes, at roughly $0.07 per call-minute.
 
-Live demo: <VERCEL_URL>  ·  Demo line: +1 (213) 451-4180  ·  Code: https://github.com/Muhammad-Athar/voice-lead-agent
+Live demo: https://voice-lead-agent.vercel.app  ·  Demo line: +1 (213) 451-4180  ·  Code: https://github.com/Muhammad-Athar/voice-lead-agent
 ```
 
 ## Skills tags to attach
