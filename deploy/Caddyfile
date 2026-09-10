@@ -1,0 +1,4 @@
+n8n.152-67-183-135.sslip.io {
+  reverse_proxy n8n:5678
+  encode gzip
+}

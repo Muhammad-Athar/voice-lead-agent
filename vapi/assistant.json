@@ -153,5 +153,9 @@
   "metadata": {
     "project": "voice-lead-agent",
     "persona": "Ava"
+  },
+  "server": {
+    "url": "__N8N_WEBHOOK_BASE__/vapi-end-of-call",
+    "timeoutSeconds": 20
   }
 }

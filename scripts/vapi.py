@@ -51,7 +51,7 @@ def register_gemini():
 
 
 def upsert_assistant():
-    cfg = json.loads((ROOT / "vapi" / "assistant.json").read_text())
+    cfg = json.loads((ROOT / "vapi" / "assistant.json").read_text().replace("__N8N_WEBHOOK_BASE__", os.environ.get("N8N_WEBHOOK_BASE", "").rstrip("/")))
     if ID_FILE.exists():
         aid = ID_FILE.read_text().strip()
         a = req("PATCH", f"/assistant/{aid}", cfg)
